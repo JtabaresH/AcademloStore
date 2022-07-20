@@ -7,11 +7,11 @@ const { User } = require('../models/user.model');
 const { Order } = require('../models/order.model');
 const { Product } = require('../models/product.model');
 const { Cart } = require('../models/cart.model');
+const { ProductInCart } = require('../models/productInCart.model');
 
 // Utils
 const { catchAsync } = require('../utils/catchAsync.util');
 const { AppError } = require('../utils/appError.util');
-const { ProductImg } = require('../models/productImg.model');
 
 dotenv.config({ path: './config.env' });
 
@@ -31,6 +31,9 @@ const createUser = catchAsync(async (req, res, next) => {
 
   // Remove password from response
   newUser.password = undefined;
+
+  // Send welcome email
+	await new Email(email).sendWelcome(username);
 
   res.status(201).json({
     status: 'success',

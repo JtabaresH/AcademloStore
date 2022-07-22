@@ -6,16 +6,18 @@ const { AppError } = require('../utils/appError.util');
 const { catchAsync } = require('../utils/catchAsync.util');
 
 const cartExists = catchAsync(async (req, res, next) => {
-  const { id } = req.params;
+  
+  const { sessionUser } = req
 
-  const cart = await Cart.findOne({ where: { id, status: 'active' } });
+  const cart = await Cart.findOne({ where: { userId: sessionUser.id, status: 'active' } })
 
   if (!cart) {
-    return next(new AppError('Cart not found', 404));
+    await Cart.create({ userId: sessionUser.id })
   }
-
+  
   req.cart = cart;
   next();
+
 });
 
 module.exports = { cartExists };

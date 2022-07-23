@@ -32,7 +32,7 @@ productsRouter.get('/categories', getAllCategoriesActive);
 
 productsRouter.use(protectSession);
 
-productsRouter.post('/', createProductValidators, categoryExists, upload.array('productImg', 5), createProduct);
+productsRouter.post('/', createProductValidators, categoryExists, /* upload.array('productImg', 5), */ createProduct);
 
 productsRouter.patch('/:id', productExists, updateProduct);
 

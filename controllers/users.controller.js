@@ -12,6 +12,7 @@ const { ProductInCart } = require('../models/productInCart.model');
 // Utils
 const { catchAsync } = require('../utils/catchAsync.util');
 const { AppError } = require('../utils/appError.util');
+const { Email } = require('../utils/email.util');
 
 dotenv.config({ path: './config.env' });
 
@@ -76,20 +77,44 @@ const login = catchAsync(async (req, res, next) => {
 });
 
 const getAllUsers = catchAsync(async (req, res, next) => {
-  const users = await User.findAll({
-    where: { status: 'active' },
-    attributes: ['id', 'username', 'email', 'status', 'role'],
-  });
+  const { sessionUser } = req
+  const role = sessionUser.role
 
-  res.status(201).json({
-    status: 'success',
-    users,
-  });
+  if(role === 'admin'){
+
+    const users = await User.findAll({
+      attributes: ['id', 'username', 'email', 'status', 'role'],
+    });
+    
+    res.status(201).json({
+      status: 'success',
+      users,
+    });
+  } else {
+    return next(new AppError('Admin permission required', 400));
+  }
+});
+
+const updateUser = catchAsync(async (req, res, next) => {
+  const { user } = req;
+  const { username, email } = req.body;
+
+  await user.update({ username, email });
+
+  res.status(201).json({ status: 'success', user });
+});
+
+const deleteUser = catchAsync(async (req, res, next) => {
+  const { user } = req;
+
+  await user.update({ status: 'inactive' });
+
+  res.status(201).json({ status: 'success', user });
 });
 
 const getAllProductsMe = catchAsync(async (req, res, next) => {
   const { sessionUser } = req;
-
+  
   const product = await Product.findAll({
     where: { userId: sessionUser.id },
     attributes: ['id', 'title', 'description', 'price', 'quantity', 'categoryId', 'userId', 'status'],
@@ -109,27 +134,14 @@ const getAllProductsMe = catchAsync(async (req, res, next) => {
     ]
   })
 
-  res.status(201).json({
-    status: 'success',
-    product,
-  });
-});
-
-const updateUser = catchAsync(async (req, res, next) => {
-  const { user } = req;
-  const { username, email } = req.body;
-
-  await user.update({ username, email });
-
-  res.status(201).json({ status: 'success', user });
-});
-
-const deleteUser = catchAsync(async (req, res, next) => {
-  const { user } = req;
-
-  await user.update({ status: 'inactive' });
-
-  res.status(201).json({ status: 'success', user });
+  if(product === undefined) {
+    return next(new AppError('This user not has products', 400));
+  } else {
+    res.status(201).json({
+      status: 'success',
+      product,
+    });
+  }
 });
 
 const getAllShoppingMe = catchAsync(async (req, res, next) => {

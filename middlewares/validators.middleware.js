@@ -82,11 +82,6 @@ const createProductValidators = [
     .withMessage('categoryId cannot be empty')
     .isNumeric()
     .withMessage('categoryId is not a number'),
-  body('userId')
-    .notEmpty()
-    .withMessage('userId cannot be empty')
-    .isNumeric()
-    .withMessage('userId is not a number'),
   checkResult,
 ];
 

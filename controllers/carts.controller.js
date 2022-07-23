@@ -10,6 +10,9 @@ const { AppError } = require('../utils/appError.util');
 const { Product } = require('../models/product.model')
 const { ProductInCart } = require('../models/productInCart.model')
 
+const getCart = catchAsync(async (req, res, next) => {
+  
+})
 
 const addProductToCart = catchAsync(async (req, res, next) => {
   const { cart } = req;

@@ -8,6 +8,8 @@ const { Order } = require('../models/order.model');
 const { Product } = require('../models/product.model');
 const { Cart } = require('../models/cart.model');
 const { ProductInCart } = require('../models/productInCart.model');
+const { Category } = require('../models/category.model');
+const { ProductImg } = require('../models/productImg.model');
 
 // Utils
 const { catchAsync } = require('../utils/catchAsync.util');

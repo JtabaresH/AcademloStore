@@ -78,7 +78,7 @@ const createProduct = catchAsync(async (req, res, next) => {
 
 			return await ProductImg.create({
 				productId: newProduct.id,
-				imgUrl: imgRes.metadata.fullPath,
+				imgUrl: imgRes.metadata.fullPath
 			});
 		});
 
@@ -111,7 +111,7 @@ const deleteProduct = catchAsync(async (req, res, next) => {
   const { product, sessionUser } = req;
 
   if (sessionUser.id === product.userId) {
-    await product.update({ status: 'disabled'})
+    await product.update({ status: 'removed'})
   } else {
     return next(new AppError('Not authorized to update', 400))
   }

@@ -11,25 +11,34 @@ const { Product } = require('../models/product.model')
 const { ProductInCart } = require('../models/productInCart.model')
 
 const getCart = catchAsync(async (req, res, next) => {
-  
+
 })
 
 const addProductToCart = catchAsync(async (req, res, next) => {
   const { cart } = req;
   const { productId, quantity } = req.body;
 
+  // Buscamos si el producto existe
   const productExistsId = await Product.findOne({ where: { status: 'active', id: productId } })
 
   if (productExistsId) {
     if (productExistsId.quantity >= quantity) {
-      const productExistsInCart = await ProductInCart.findOne({ where: { productId: productId } })
+      const productExistsInCart = await ProductInCart.findOne({ where: { productId } })
 
       if (productExistsInCart) {
-        next(new AppError('This product is already in the cart', 400))
-      } else if (productExistsInCart.status === 'removed') {
+        if (productExistsInCart.status === 'removed') {
 
-        await productExistsInCart.update({ status: 'active' })
+          await productExistsInCart.update({ status: 'active', quantity })
 
+          res.status(201).json({
+            status: 'success',
+            productExistsInCart
+          })
+
+        } else {
+          next(new AppError('This product is already in the cart', 400))
+        }
+      } else {
         const newProductInCart = await ProductInCart.create({
           cartId: cart.id,
           productId,
@@ -40,7 +49,6 @@ const addProductToCart = catchAsync(async (req, res, next) => {
           status: 'success',
           newProductInCart
         })
-
       }
 
     } else {
@@ -54,24 +62,26 @@ const addProductToCart = catchAsync(async (req, res, next) => {
 });
 
 const updateCartProduct = catchAsync(async (req, res, next) => {
-  const { cart, productInCart, sessionUser } = req;
+  const { cart, sessionUser } = req;
   const { productId, newQty } = req.body;
 
   if (cart.userId === sessionUser.id) {
-    const productExistsInCart = await ProductInCart.findOne({ where: { status: 'active', id: productId } })
+    const productExistsId = await Product.findOne({ where: { id: productId } })
+    const productExistsInCart = await ProductInCart.findOne({ where: { id: productId } })
+
     if (productExistsInCart) {
-      if (productExistsInCart.quantity >= newQty) {
-        await productInCart.update({ quantity: newQty })
+      if (productExistsId.quantity >= newQty) {
+        await productExistsInCart.update({ quantity: newQty })
 
         if (newQty === 0) {
-          await productInCart.update({ status: 'removed' })
+          await productExistsInCart.update({ status: 'removed' })
         } else if (newQty > 0 && productExistsInCart.status === 'removed') {
-          await productInCart.update({ status: 'active' })
+          await productExistsInCart.update({ status: 'active' })
         }
 
         res.status(201).json({
           status: 'success',
-          productInCart
+          productExistsInCart
         })
 
       } else {
@@ -86,25 +96,27 @@ const updateCartProduct = catchAsync(async (req, res, next) => {
 });
 
 const deleteProductFromCartById = catchAsync(async (req, res, next) => {
-  const { productInCart } = req;
+  const { cart, sessionUser } = req;
   const { productId } = req.params;
 
-  const productExistsInCart = await ProductInCart.findOne({ where: { status: 'active', id: productId } })
+  if (cart.userId === sessionUser.id) {
+    const productExistsInCart = await ProductInCart.findOne({ where: { status: 'active', id: productId } })
 
-  if (productExistsInCart) {
-    await productInCart.update({ status: 'removed', quantity: 0 })
-  } else {
-    return next(new AppError('This product not exist in the cart', 400))
+    if (productExistsInCart) {
+      await productExistsInCart.update({ status: 'removed', quantity: 0 })
+    } else {
+      return next(new AppError('This product not exist in the cart', 400))
+    }
+
+    res.status(201).json({
+      status: 'success',
+      productExistsInCart
+    })
   }
-
-  res.status(201).json({
-    status: 'success',
-    productInCart
-  })
 });
 
 const purcharseCart = catchAsync(async (req, res, next) => {
-  
+
 });
 
 module.exports = {

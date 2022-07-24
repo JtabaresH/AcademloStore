@@ -8,9 +8,10 @@ const { catchAsync } = require('../utils/catchAsync.util');
 
 const productExists = catchAsync(async (req, res, next) => {
   const { id } = req.params;
+  const { productId } = req.body;
 
   const product = await Product.findOne({
-    where: { id, status: 'active' },
+    where: { id: productId || id, status: 'active' },
     include: { model: ProductImg }
   });
 

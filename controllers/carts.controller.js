@@ -8,11 +8,28 @@ const { AppError } = require('../utils/appError.util');
 
 // Models
 const { Product } = require('../models/product.model')
-const { ProductInCart } = require('../models/productInCart.model')
+const { ProductInCart } = require('../models/productInCart.model');
+const { Category } = require('../models/category.model');
 
 const getCart = catchAsync(async (req, res, next) => {
   const getAllProductsInCart = await ProductInCart.findAll({ 
-    attributes: [ 'id', 'cartId', 'productId', 'quantity', 'status'] 
+    attributes: [ 'id', 'cartId', 'productId', 'quantity', 'status'],
+    include: [
+      {
+        model: Product,
+        required: false,
+        where: { status: 'active' },
+        attributes: [ 'title', 'description', 'price', 'categoryId' ],
+        include: [ 
+          {
+            model: Category,
+            required: false,
+            where: { status: 'active' },
+            attributes: [ 'name' ]
+          }
+        ]
+      }
+    ]
   })
   res.status(201).json({
     status: 'success',

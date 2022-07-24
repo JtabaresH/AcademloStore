@@ -11,7 +11,13 @@ const { Product } = require('../models/product.model')
 const { ProductInCart } = require('../models/productInCart.model')
 
 const getCart = catchAsync(async (req, res, next) => {
-
+  const getAllProductsInCart = await ProductInCart.findAll({ 
+    attributes: [ 'id', 'cartId', 'productId', 'quantity', 'status'] 
+  })
+  res.status(201).json({
+    status: 'success',
+    getAllProductsInCart
+  })
 })
 
 const addProductToCart = catchAsync(async (req, res, next) => {
@@ -120,6 +126,7 @@ const purcharseCart = catchAsync(async (req, res, next) => {
 });
 
 module.exports = {
+  getCart,
   addProductToCart,
   updateCartProduct,
   deleteProductFromCartById,

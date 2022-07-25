@@ -11,6 +11,7 @@ const { Product } = require('../models/product.model')
 const { ProductInCart } = require('../models/productInCart.model');
 const { Category } = require('../models/category.model');
 const { Cart } = require('../models/cart.model');
+const { Order } = require('../models/order.model');
 
 const getCart = catchAsync(async (req, res, next) => {
   const getCart = await Cart.findOne({
@@ -148,6 +149,7 @@ const deleteProductFromCartById = catchAsync(async (req, res, next) => {
 });
 
 const purcharseCart = catchAsync(async (req, res, next) => {
+  
   const { sessionUser } = req
 
   const cartToPurchase = await Cart.findOne({
@@ -180,17 +182,25 @@ const purcharseCart = catchAsync(async (req, res, next) => {
   })
   
   const statusPurchased = cartToPurchase.dataValues.productInCarts.map(async(prod) => {
+    const productQuantity = await Product.findOne({ where: { id: prod.productId }})
+    const newQty = productQuantity.quantity - prod.quantity
+    await productQuantity.update({ quantity: newQty })
     return await prod.update({ status: 'purchased' })
+    
   })
   await cartToPurchase.update({ status: 'purchased' })
   await Promise.all(statusPurchased)
-
-
-
+  
+  const newOrder = await Order.create({ 
+    userId: sessionUser.id, 
+    cartId: cartToPurchase.id, 
+    totalPrice: total 
+  })
+  
   res.status(201).json({
     status: 'success',
     cartToPurchase,
-    total
+    newOrder
   })
 
 });

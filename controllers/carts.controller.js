@@ -10,22 +10,31 @@ const { AppError } = require('../utils/appError.util');
 const { Product } = require('../models/product.model')
 const { ProductInCart } = require('../models/productInCart.model');
 const { Category } = require('../models/category.model');
+const { Cart } = require('../models/cart.model');
 
 const getCart = catchAsync(async (req, res, next) => {
-  const getAllProductsInCart = await ProductInCart.findAll({ 
-    attributes: [ 'id', 'cartId', 'productId', 'quantity', 'status'],
+  const getCart = await Cart.findOne({
+    where: { status: 'active' },
     include: [
       {
-        model: Product,
+        model: ProductInCart,
         required: false,
         where: { status: 'active' },
-        attributes: [ 'title', 'description', 'price', 'categoryId' ],
-        include: [ 
+        attributes: ['id', 'cartId', 'productId', 'quantity', 'status'],
+        include: [
           {
-            model: Category,
+            model: Product,
             required: false,
             where: { status: 'active' },
-            attributes: [ 'name' ]
+            attributes: ['title', 'description', 'price', 'categoryId'],
+            include: [
+              {
+                model: Category,
+                required: false,
+                where: { status: 'active' },
+                attributes: ['name']
+              }
+            ]
           }
         ]
       }
@@ -33,7 +42,7 @@ const getCart = catchAsync(async (req, res, next) => {
   })
   res.status(201).json({
     status: 'success',
-    getAllProductsInCart
+    getCart
   })
 })
 
@@ -46,7 +55,7 @@ const addProductToCart = catchAsync(async (req, res, next) => {
 
   if (productExistsId) {
     if (productExistsId.quantity >= quantity) {
-      const productExistsInCart = await ProductInCart.findOne({ where: { productId } })
+      const productExistsInCart = await ProductInCart.findOne({ where: { productId, status: 'active' } })
 
       if (productExistsInCart) {
         if (productExistsInCart.status === 'removed') {
@@ -139,6 +148,50 @@ const deleteProductFromCartById = catchAsync(async (req, res, next) => {
 });
 
 const purcharseCart = catchAsync(async (req, res, next) => {
+  const { sessionUser } = req
+
+  const cartToPurchase = await Cart.findOne({
+    where: { status: 'active', userId: sessionUser.id },
+    attributes: ['id', 'userId', 'status'],
+    include: [
+      {
+        model: ProductInCart,
+        required: false,
+        where: { status: 'active' },
+        attributes: ['id', 'cartId', 'productId', 'quantity', 'status'],
+        include: [
+          {
+            model: Product,
+            required: false,
+            where: { status: 'active' },
+            attributes: ['title', 'description', 'price', 'categoryId', 'quantity']
+          }
+        ]
+      }
+    ]
+  })
+
+  if (!cartToPurchase) {
+    return next(new AppError('This user not has a cart', 400))
+  }
+
+  const total = cartToPurchase.dataValues.productInCarts.reduce(async(acc, prod) => {
+    acc + (prod.quantity) * (prod.product.price), 0
+  })
+  
+  const statusPurchased = cartToPurchase.dataValues.productInCarts.map(async(prod) => {
+    return await prod.update({ status: 'purchased' })
+  })
+  await cartToPurchase.update({ status: 'purchased' })
+  await Promise.all(statusPurchased)
+
+
+
+  res.status(201).json({
+    status: 'success',
+    cartToPurchase,
+    total
+  })
 
 });
 

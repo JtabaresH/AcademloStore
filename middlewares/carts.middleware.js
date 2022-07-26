@@ -9,10 +9,10 @@ const cartExists = catchAsync(async (req, res, next) => {
   
   const { sessionUser } = req
 
-  const cart = await Cart.findOne({ where: { userId: sessionUser.id, status: 'active' } })
+  let cart = await Cart.findOne({ where: { userId: sessionUser.id, status: 'active' } })
   
   if (!cart) {
-    await Cart.create({ userId: sessionUser.id })
+    cart = await Cart.create({ userId: sessionUser.id })
   }
   
   req.cart = cart;

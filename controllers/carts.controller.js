@@ -77,7 +77,7 @@ const addProductToCart = catchAsync(async (req, res, next) => {
           productId,
           quantity
         })
-
+        
         res.status(201).json({
           status: 'success',
           newProductInCart
@@ -177,7 +177,7 @@ const purcharseCart = catchAsync(async (req, res, next) => {
     return next(new AppError('This user not has a cart', 400))
   }
 
-  const total = cartToPurchase.dataValues.productInCarts.reduce(async(acc, prod) => {
+  const total = cartToPurchase.dataValues.productInCarts.reduce((acc, prod) => {
     acc + (prod.quantity) * (prod.product.price), 0
   })
   
@@ -190,6 +190,8 @@ const purcharseCart = catchAsync(async (req, res, next) => {
   })
   await cartToPurchase.update({ status: 'purchased' })
   await Promise.all(statusPurchased)
+
+  console.log(total);
   
   const newOrder = await Order.create({ 
     userId: sessionUser.id, 

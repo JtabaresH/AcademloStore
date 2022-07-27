@@ -2,11 +2,11 @@ const express = require('express');
 
 // Controllers
 const {
-  getCart,
   addProductToCart,
-  updateCartProduct,
-  deleteProductFromCartById,
-  purcharseCart,
+  updateProductInCart,
+  purchaseCart,
+  removeProductFromCart,
+  getUserCart,
 } = require('../controllers/carts.controller');
 
 // Middlewares
@@ -18,10 +18,10 @@ const { protectSession } = require('../middlewares/auth.middleware');
 const cartsRouter = express.Router();
 
 cartsRouter.use(protectSession);
-cartsRouter.get('/', getCart)
-cartsRouter.post('/add-product', cartExists, productExists, addProductToCart);
-cartsRouter.patch('/update-cart', cartExists, productExists, updateCartProduct);
-cartsRouter.delete('/:productId', cartExists, deleteProductFromCartById);
-cartsRouter.post('/purchase', purcharseCart);
+cartsRouter.get('/', getUserCart)
+cartsRouter.post('/add-product', addProductToCart);
+cartsRouter.patch('/update-cart', updateProductInCart);
+cartsRouter.delete('/:productId', removeProductFromCart);
+cartsRouter.post('/purchase', purchaseCart);
 
 module.exports = { cartsRouter };

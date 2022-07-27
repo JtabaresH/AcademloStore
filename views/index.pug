@@ -6,18 +6,20 @@ html(lang="en")
 		meta(name="viewport" content="width=device-width, initial-scale=1.0")
 		link(rel="stylesheet" href="./styles.css")
 		title NodeJs
-	
+
 	body
 		h1(class="title") #{title}
 
 		div(class="container")
-			if posts.length === 0
-				p No posts available 
+			if productInCart.length === 0
+				p No orders available in index
 			else
-				each post in posts
+				each product in productInCart
 					div(class="post-card")
-						h3 #{post.title}
-						p #{post.content}
+						h3 #{product.title}
+						p #{product.price}
+						p #{product.quantity}
+						p(class="post-card__content") #{totalPrice}
 
 	script(src="./index.js")
 

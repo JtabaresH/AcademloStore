@@ -1,7 +1,3 @@
-/* const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const dotenv = require('dotenv'); */
-
 // Utils
 const { catchAsync } = require('../utils/catchAsync.util');
 const { AppError } = require('../utils/appError.util');
@@ -77,7 +73,7 @@ const addProductToCart = catchAsync(async (req, res, next) => {
           productId,
           quantity
         })
-        
+
         res.status(201).json({
           status: 'success',
           newProductInCart
@@ -149,7 +145,7 @@ const deleteProductFromCartById = catchAsync(async (req, res, next) => {
 });
 
 const purcharseCart = catchAsync(async (req, res, next) => {
-  
+
   const { sessionUser } = req
 
   const cartToPurchase = await Cart.findOne({
@@ -177,28 +173,26 @@ const purcharseCart = catchAsync(async (req, res, next) => {
     return next(new AppError('This user not has a cart', 400))
   }
 
-  const total = cartToPurchase.dataValues.productInCarts.reduce((acc, prod) => {
-    acc + (prod.quantity) * (prod.product.price), 0
-  })
   
-  const statusPurchased = cartToPurchase.dataValues.productInCarts.map(async(prod) => {
-    const productQuantity = await Product.findOne({ where: { id: prod.productId }})
+  /* const totalPrice = cartToPurchase.dataValues.productInCarts.map(async (prod) => { }) */
+  /* const total = cartToPurchase.dataValues.productInCarts.reduce((acc, prod) => { acc + (prod.quantity * prod.product.price), 0 }) */
+
+  const statusPurchased = cartToPurchase.dataValues.productInCarts.map(async (prod) => {
+    const productQuantity = await Product.findOne({ where: { id: prod.productId } })
     const newQty = productQuantity.quantity - prod.quantity
     await productQuantity.update({ quantity: newQty })
     return await prod.update({ status: 'purchased' })
-    
+
   })
   await cartToPurchase.update({ status: 'purchased' })
   await Promise.all(statusPurchased)
 
-  console.log(total);
-  
-  const newOrder = await Order.create({ 
-    userId: sessionUser.id, 
-    cartId: cartToPurchase.id, 
-    totalPrice: total 
+  const newOrder = await Order.create({
+    userId: sessionUser.id,
+    cartId: cartToPurchase.id,
+/*     totalPrice: total */
   })
-  
+
   res.status(201).json({
     status: 'success',
     cartToPurchase,

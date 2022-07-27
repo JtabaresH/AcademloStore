@@ -13,7 +13,7 @@ class Email {
 
 	// Connect to mail service
 	newTransport() {
-		if (process.env.NODE_ENV === 'production') {
+		if (process.env.NODE_ENV === 'development') {
 			// Connect to SendGrid
 			return nodemailer.createTransport({
 				service: 'SendGrid',
@@ -50,12 +50,12 @@ class Email {
 		});
 	}
 
-	async sendWelcome(name) {
-		await this.send('welcome', 'Welcome to our app', { name });
+	async sendWelcome(username) {
+		await this.send('welcome', 'Welcome to our app', { username });
 	}
 
-	async sendNewPost(title, content) {
-		await this.send('newPost', 'You have created a new post', {
+	async sendNewOrder(title, content) {
+		await this.send('newOrder', 'You have a new order', {
 			title,
 			content,
 		});

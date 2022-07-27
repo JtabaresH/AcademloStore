@@ -168,15 +168,16 @@ const purcharseCart = catchAsync(async (req, res, next) => {
       }
     ]
   })
-
+  
+  /* const total = cartToPurchase.productInCarts.map((prod) => {(prod.quantity * prod.product.price)})
+  console.log(total)
+  
+  return next(new AppError('Pruebas', 400)) */
+  /* const totalPrice = cartToPurchase.dataValues.productInCarts.map(async (prod) => { }) */
   if (!cartToPurchase) {
     return next(new AppError('This user not has a cart', 400))
   }
-
   
-  /* const totalPrice = cartToPurchase.dataValues.productInCarts.map(async (prod) => { }) */
-  /* const total = cartToPurchase.dataValues.productInCarts.reduce((acc, prod) => { acc + (prod.quantity * prod.product.price), 0 }) */
-
   const statusPurchased = cartToPurchase.dataValues.productInCarts.map(async (prod) => {
     const productQuantity = await Product.findOne({ where: { id: prod.productId } })
     const newQty = productQuantity.quantity - prod.quantity
@@ -187,16 +188,16 @@ const purcharseCart = catchAsync(async (req, res, next) => {
   await cartToPurchase.update({ status: 'purchased' })
   await Promise.all(statusPurchased)
 
-  const newOrder = await Order.create({
+/*   const newOrder = await Order.create({
     userId: sessionUser.id,
     cartId: cartToPurchase.id,
-/*     totalPrice: total */
-  })
+    totalPrice: total
+  }) */
 
   res.status(201).json({
     status: 'success',
     cartToPurchase,
-    newOrder
+    /* newOrder */
   })
 
 });

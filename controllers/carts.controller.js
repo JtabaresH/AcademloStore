@@ -69,7 +69,7 @@ const addProductToCart = catchAsync(async (req, res, next) => {
     // Cart already exists
     // Check if product already exists in cart
     const productExists = await ProductInCart.findOne({
-      where: { cartId: cart.id, productId },
+      where: { cartId: cart.id, productId, status: 'active' },
     });
 
     if (productExists) {

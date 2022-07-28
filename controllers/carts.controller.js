@@ -83,50 +83,37 @@ const addProductToCart = catchAsync(async (req, res, next) => {
 });
 
 const updateProductInCart = catchAsync(async (req, res, next) => {
-  const { sessionUser } = req;
+  const { cart, sessionUser } = req;
   const { productId, newQty } = req.body;
 
-  // Validate input qty
-  const product = await Product.findOne({
-    where: { id: productId, status: 'active' },
-  });
+  if (cart.userId === sessionUser.id) {
+    const productExistsId = await Product.findOne({ where: { id: productId } })
+    const productExistsInCart = await ProductInCart.findOne({ where: { id: productId } })
 
-  if (!product) {
-    return next(new AppError('Invalid product', 404));
-  } else if (newQty > product.quantity) {
-    return next(
-      new AppError(
-        `This product only has ${product.quantity} items available`,
-        400
-      )
-    );
+    if (productExistsInCart) {
+      if (productExistsId.quantity >= newQty) {
+        await productExistsInCart.update({ quantity: newQty })
+
+        if (newQty === 0) {
+          await productExistsInCart.update({ status: 'removed' })
+        } else if (newQty > 0 && productExistsInCart.status === 'removed') {
+          await productExistsInCart.update({ status: 'active' })
+        }
+
+        res.status(201).json({
+          status: 'success',
+          productExistsInCart
+        })
+
+      } else {
+        return next(new AppError('The quantity is greater than available', 400))
+      }
+    } else {
+      return next(new AppError('This product not exist in the cart', 400))
+    }
+  } else {
+    return next(new AppError('This user does not have a cart', 400))
   }
-
-  const cart = await Cart.findOne({
-    where: { userId: sessionUser.id, status: 'active' },
-  });
-
-  if (!cart) {
-    return next(new AppError('Cart not found', 404));
-  }
-
-  const productInCart = await ProductInCart.findOne({
-    cartId: cart.id,
-    productId,
-    status: 'active',
-  });
-
-  if (!productInCart) {
-    return next(new AppError('Product not found in cart', 404));
-  }
-
-  if (newQty <= 0) {
-    await productInCart.update({ quantity: 0, status: 'removed' });
-  } else if (newQty > 0) {
-    await productInCart.update({ quantity: newQty });
-  }
-
-  res.status(200).json({ status: 'success' });
 });
 
 const purchaseCart = catchAsync(async (req, res, next) => {
@@ -173,30 +160,23 @@ const purchaseCart = catchAsync(async (req, res, next) => {
 });
 
 const removeProductFromCart = catchAsync(async (req, res, next) => {
-  const { sessionUser } = req;
+  const { cart, sessionUser } = req;
   const { productId } = req.params;
 
-  const cart = await Cart.findOne({
-    where: { userId: sessionUser.id, status: 'active' },
-  });
+  if (cart.userId === sessionUser.id) {
+    const productExistsInCart = await ProductInCart.findOne({ where: { status: 'active', id: productId } })
 
-  if (!cart) {
-    return next(new AppError('Cart not found', 404));
+    if (productExistsInCart) {
+      await productExistsInCart.update({ status: 'removed', quantity: 0 })
+    } else {
+      return next(new AppError('This product not exist in the cart', 400))
+    }
+
+    res.status(201).json({
+      status: 'success',
+      productExistsInCart
+    })
   }
-
-  const productInCart = await ProductInCart.findOne({
-    cartId: cart.id,
-    productId,
-    status: 'active',
-  });
-
-  if (!productInCart) {
-    return next(new AppError('Product not found in cart', 404));
-  }
-
-  await productInCart.update({ status: 'removed', quantity: 0 });
-
-  res.status(200).json({ status: 'success' });
 });
 
 module.exports = {

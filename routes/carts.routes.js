@@ -20,8 +20,8 @@ const cartsRouter = express.Router();
 cartsRouter.use(protectSession);
 cartsRouter.get('/', getUserCart)
 cartsRouter.post('/add-product', addProductToCart);
-cartsRouter.patch('/update-cart', updateProductInCart);
-cartsRouter.delete('/:productId', removeProductFromCart);
+cartsRouter.patch('/update-cart', cartExists, productExists, updateProductInCart);
+cartsRouter.delete('/:productId', cartExists, removeProductFromCart);
 cartsRouter.post('/purchase', purchaseCart);
 
 module.exports = { cartsRouter };

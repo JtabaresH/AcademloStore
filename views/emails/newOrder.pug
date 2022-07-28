@@ -5,11 +5,11 @@ block emailContent
 
   div(class="post-card")
     if productInCart.length === 0
-      p No orders available in new order
+      p No products available to purchase
     else
       each product in productInCart
         div(class="post-card")
-          h3 #{product.title}
-          p #{product.price}
-          p #{product.quantity}
-    p(class="post-card__content") Valor total: #{totalPrice}
+          h3 Item: #{product.product.title}
+          p Unit price: $#{product.product.price}
+          p Quantity purchase: #{product.quantity} UND
+    p(class="post-card__content") Total price: $#{totalPrice}
